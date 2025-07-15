@@ -37,4 +37,7 @@ COPY --from=base /app /app
 
 RUN mkdir -p /app/logs
 
-ENTRYPOINT ["sh", "start.sh"]
+COPY start.sh .
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
