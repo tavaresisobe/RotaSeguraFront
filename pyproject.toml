@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "rota-segura"
+version = "0.1.0"
+description = "Aplicação para cálculo de rotas seguras com base em dados de criminalidade"
+authors = ["Grupo Rota Segura <gisobe@unifesp.br.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+streamlit = "1.46.1"
+streamlit_folium = "0.25.0"
+folium = "0.20.0"
+requests = "2.32.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
