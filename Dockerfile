@@ -1,43 +1,43 @@
-FROM python:3.11.4-slim-bookworm AS base
+FROM python:3.11.4-slim-bookworm AS builder
 
-ENV PATH=/usr/local/bin:$PATH
-ENV PYTHONPATH=/app
-ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
-ENV PYTHONFAULTHANDLER=1 \
-    PYTHONHASHSEED=random \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
-
-RUN apt-get update -qq && apt-get install -y --no-install-recommends \
-    gcc libffi-dev curl build-essential \
-    && curl -sSL https://install.python-poetry.org | python3 - --version 1.8.4 \
-    && ln -s /root/.local/bin/poetry /usr/local/bin/poetry \
-    && apt-get remove -y gcc build-essential \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    PYTHONPATH=/app
 
 WORKDIR /app
 
+RUN apt-get update -qq && apt-get install -y --no-install-recommends \
+    gcc libffi-dev curl build-essential
+
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.8.4 \
+    && ln -s /root/.local/bin/poetry /usr/local/bin/poetry
+
 COPY pyproject.toml poetry.lock /app/
-RUN poetry config virtualenvs.create false \
-    && poetry install --only main --no-cache
+
+RUN poetry config virtualenvs.create false
+
+RUN poetry install --no-cache --only main
 
 COPY . /app
+
 RUN chmod +x start.sh
 
 FROM python:3.11.4-slim-bookworm AS final
 
-WORKDIR /app
-ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
 
-COPY --from=base /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=base /usr/local/bin /usr/local/bin
-COPY --from=base /app /app
+WORKDIR /app
+
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /app /app
 
 RUN mkdir -p /app/logs
 
-COPY start.sh .
-RUN chmod +x start.sh
+EXPOSE 8501
 
 CMD ["./start.sh"]
